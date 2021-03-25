@@ -75,7 +75,7 @@ router.delete("/:code", async function(req, res, next) {
     );
     const deleted = result.rows[0];
     if (deleted) {
-        return res.json({ status: "Deleted" });
+        return res.json({ status: "deleted" });
     }
     throw new NotFoundError();
 })
