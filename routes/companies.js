@@ -8,23 +8,31 @@ router.get("/", async function(req, res, next) {
         `SELECT code, name, description
             FROM companies`
     );
-    
+
     const companies = results.rows;
     return res.json({ companies });
 })
 
 router.get("/:code", async function(req, res, next) {
-    const result = await db.query(
+    const cResult = await db.query(
         `SELECT code, name, description
             FROM companies
             WHERE code = $1`,
             [req.params.code]
     );
-    
-    const company = result.rows[0];
+
+    const company = cResult.rows[0];
     if (company) {
+        const iResult = await db.query(
+            `SELECT id, comp_code, amt, paid, add_date, paid_date
+                FROM invoices
+                WHERE comp_code = $1
+            `,
+            [company.code]
+        );
+        company.invoices = iResult.rows;
         return res.json({ company });
-    } 
+    }
     throw new NotFoundError();
 })
 
@@ -36,7 +44,7 @@ router.post("/", async function(req, res, next) {
             RETURNING code, name, description`,
             [code, name, description]
     );
-    
+
     const company = result.rows[0];
     return res.status(201).json({ company })
 })
@@ -55,7 +63,7 @@ router.put("/:code", async function(req, res, next) {
     const updatedCompany = updateResult.rows[0];
     if (updatedCompany) {
         return res.json({company: updatedCompany})
-    } 
+    }
     throw new NotFoundError();
 })
 
@@ -68,7 +76,7 @@ router.delete("/:code", async function(req, res, next) {
     const deleted = result.rows[0];
     if (deleted) {
         return res.json({ status: "Deleted" });
-    } 
+    }
     throw new NotFoundError();
 })
 
